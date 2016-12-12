@@ -1,0 +1,139 @@
+---
+PART I. DATA SET-UP AND CLEANING.
+---
+
+Setting up work environment and directory.
+```{r}
+rm(list=ls())
+setwd(dir="~/Desktop/PS239T/")
+```
+
+Installing relevant libraries. 
+```{r}
+library(foreign)
+library(lubridate)
+library(ggplot2)
+library(viridis)
+```
+
+Import fitbit dataset. ACTIVITY data starts on date 05-08-2015. 
+```{r}
+activity<-read.csv(file="activity.csv", stringsAsFactors=F)
+head(activity)
+```
+
+Inspecting fitbit ACITIVTY dataset and cleaning/formatting variables.
+```{r}
+class(activity) #Dataframe.
+activity <- activity[-1,] #To match the start date of the sleeping data. 
+activity <- activity[-368,] #Deleting last two empty rows (368-369). 
+activity <- activity[-367,]
+
+dim(activity) #366 rows, 10 columns = 366 observations, 10 variables.
+
+#Renaming column headers from Italian to English.
+colnames(activity) 
+colnames(activity) <- c("date", "calburned", "steps", "distance", "floors", "minsed", "minlight", "minmod", "minintense", "activitycal")
+colnames(activity) #Should display new column names.
+
+class(activity$date) #Character.
+activity$date <- format(as.Date(activity[,1], "%d-%m-%Y"))
+
+class(activity$calburned) #Numeric.
+activity$calburned <- as.numeric(format(activity$calburned, digits=4, decimal.mark=""))
+  #Needed to add "as.numeric" to maintain numeric class for calories burned.
+class(activity$calburned) #Still numeric.
+
+class(activity$steps) #Numeric.
+activity$steps <- as.numeric(format(activity$steps, digits=5, decimal.mark=""))
+class(activity$steps) #Still numeric.
+
+class(activity$distance) #Character.
+activity$distance <- as.numeric(gsub(",", ".", activity$distance))
+class(activity$distance) #Numeric.
+
+class(activity$floors) #Integer.
+activity$floors <- as.numeric(activity$floors) 
+class(activity$floors) #Numeric.
+
+class(activity$minsed) #Numeric. All minutes variables are numeric.
+activity$minsed <- as.numeric(activity$minsed) 
+class(activity$minsed) #Numeric.
+
+class(activity$minlight) #Integer.
+activity$minlight <- as.numeric(activity$minlight) 
+class(activity$minlight) #Numeric.
+
+class(activity$minmod) #Integer.
+activity$minmod <- as.numeric(activity$minmod) 
+class(activity$minmod) #Numeric.
+
+class(activity$minintense) #Integer.
+activity$minintense <- as.numeric(activity$minintense) 
+class(activity$minintense) #Numeric.
+
+class(activity$activitycal) #Integer.
+activity$activitycal <- as.numeric(activity$activitycal) 
+class(activity$activitycal) #Numeric.
+
+head(activity)
+str(activity)
+```
+
+Inspecting fitbit SLEEP dataset.
+```{r}
+sleep <- read.csv(file="sleep.csv", stringsAsFactors=F)
+
+dim(sleep) #367 rows, 5 columns = 367 observations, 5 variables.
+
+colnames(sleep) 
+colnames(sleep) <- c("date", "sleepmin", "awakemin", "awakings", "restmin")
+colnames(sleep)
+
+class(sleep$date) #Character.
+sleep$date <- format(as.Date(sleep[,1], "%d-%m-%Y"))
+
+class(sleep$sleepmin) #Integer.
+sleep$sleepmin <- as.numeric(sleep$sleepmin) 
+class(sleep$sleepmin) #Numeric.
+
+class(sleep$awakemin) #Integer.
+sleep$awakemin <- as.numeric(sleep$awakemin) 
+class(sleep$awakemin) #Numeric.
+
+class(sleep$awakings) #Integer.
+sleep$awakings <- as.numeric(sleep$awakings) 
+class(sleep$awakings) #Numeric.
+
+class(sleep$restmin) #Integer.
+sleep$restmin<- as.numeric(sleep$restmin) 
+class(sleep$restmin) #Numeric.
+```
+
+Merging SLEEP and ACITVITY data together using the unique "date" column shared by both datasets.
+```{r}
+fitbitdata <- merge(activity, sleep, by=c("date"), all.x=TRUE)
+
+duplicated(fitbitdata)
+dim(fitbitdata) #372 rows, 14 variables. 
+head(fitbitdata)
+summary(fitbitdata)
+#There are 4 missing values. Need to find out which ones they are.
+
+which(is.na(fitbitdata$sleepmin)) #Rows 275, 276, 277, and 278 having NA values.
+fitbitdata <- fitbitdata[-278,]
+fitbitdata <- fitbitdata[-277,]
+fitbitdata <- fitbitdata[-276,]
+fitbitdata <- fitbitdata[-275,]
+
+summary(fitbitdata) #No more missing values. 
+
+#When scrolling through the data, I noticed there were some duplicate dates. Now I need to see which rows have duplicate dates and remove them.
+duplicates <- which(duplicated(fitbitdata$date))
+#Duplicates rows: 25  27  29  31  33  35 276
+
+fitbitdata <- fitbitdata[-duplicates,] #Removing duplicates.
+which(duplicated(fitbitdata$date)) #0 duplicates now. 361 unique observations for 364 days between May 9 2015 and May 7 2016.
+
+fitbitdata$date <- as.Date(fitbitdata$date) #Formating date variable as date.
+```

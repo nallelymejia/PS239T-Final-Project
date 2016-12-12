@@ -27,13 +27,13 @@ R, version 3.3.1
 ###Results:
 1. regresults.txt - Regression results from 4 models displayed in a table.
 
-2. dailytracker.pdf
+2. dailytracker.pdf - 3 plots showing distance and calories tracked daily over the year.
 
-3. seasons.pdf
+3. seasons.pdf - 2 plots showing distance and calories burned by seasons.
 
-4. sleep.pdf
+4. sleep.pdf - 2 plots showing sleep patterns.
 
-5. sleepefficiency.pdf
+5. sleepefficiency.pdf - 2 plots showing sleep efficiency and its relationship to sleep duration.
 
 ##More information
 Creator: Nallely Mejia nmejia@berkeley.edu

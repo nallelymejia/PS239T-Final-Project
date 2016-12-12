@@ -1,0 +1,166 @@
+PART II. DATA PLOTS.
+Plotting variables in merged dataset (fitbitdata.csv) to look at visual patterns before running regressions of interest.
+
+```{r}
+install.packages("gridExtra")
+install.packages("cowplot")
+library(gridExtra)
+library(cowplot)
+
+#Downloading libraries/packages for exporting plots at the end of the code.
+```
+
+Plots 1-3: Displays plots of fitbit measures tracked daily over a year from May 2015 to May 2016. 
+```{r}
+#Plotting histogram of distance.
+plot1 <- qplot(fitbitdata$distance, geom="histogram", binwidth = 1,  
+      xlab = "Distance (miles)",
+      ylab = "Number of Days",
+      fill=I(colors()[95]),
+      alpha=I(.2),
+      xlim=c(0,20))
+plot1
+
+#Plotting distanced over time.
+plot2 <- ggplot(data=fitbitdata, aes(date, distance)) + 
+    geom_line(colour="slateblue") +
+    xlab("Date") + 
+    ylab("Distance (miles)") + 
+    ggtitle("Daily Distance Tracked Over A Year") +
+    theme(plot.title = element_text(hjust = 0.5))
+plot2
+
+#Plotting calories burned over time.
+plot3 <- ggplot(data=fitbitdata, aes(date, calburned)) + 
+    geom_line(colour="slateblue") +
+    xlab("Date") + 
+    ylab("Calories Burned") + 
+    ggtitle("Daily Calories Burned Over A Year") +
+    theme(plot.title = element_text(hjust = 0.5))
+plot3
+
+#Exporting plots 1-3 to pdf titled "dailytracker."
+dailytrack <- plot_grid(plot1, plot2, plot3, align = "v", nrow = 3, rel_heights = c(1/2, 1/2))
+
+pdf("dailytracker")
+grid.arrange(dailytrack, ncol=1)
+dev.off()
+
+```
+
+
+Plots 4-5: Displays distance and calories burned by seasons. Created a "seasons" variable to correspond with the dates tracked by the FitBit. Roughly every 3 months corresponds to a season (other formulas exist that use equinox dates as cut-offs).
+```{r}
+months <- as.numeric(format(as.Date(fitbitdata$date, '%Y-%m-%d'), '%m'))
+  #Extracting the month from the date reported. Setting each month equal to a number.
+index <- setNames( rep(c('winter', 'spring', 'summer', 'fall'), each=3), c(12,1:11))
+  #Months are repeated 3x each. Months correpond with numbers 1-12. Winter starting with 12, 1, 2... then Spring... Summmer, etc.
+fitbitdata$Season <- unname(index[as.character(months)])
+  #Removes labels from months and leaves season names in new season variable.
+
+#Plotting distance by calories burned (differences by season).
+plot4 <- ggplot(data = fitbitdata, aes(x = distance, y = calburned)) +
+  geom_point(aes(color=Season)) +
+  xlab("Distance (miles)") + 
+  ylab("Calories Burned") + 
+  ggtitle("Distance and Calories Burned by Season") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_color_discrete(name=("Season"),
+                    labels=c("Winter", "Spring", "Summer", "Autumn"))
+plot4
+
+#Plotting distanced by calories burned by seasons (4 mini graphs on one page).
+plot5 <- ggplot(data = fitbitdata, aes(x = distance, y = calburned)) +
+  geom_point(aes(color=Season)) +
+  xlab("Distance (miles)") + 
+  ylab("Calories Burned") + 
+  ggtitle("Distance and Calories Burned by Season") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot5 <- plot5 + facet_grid(. ~ Season) + theme(legend.position="none")
+
+
+#Exporting plot 4 and 5 to pdf titled "seasons"
+seasons <- plot_grid(plot4, plot5, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
+
+pdf("seasons")
+grid.arrange(seasons, ncol=1)
+dev.off()
+```
+
+Sleep Plots 6-7: Displays duration of sleep over the course of a year. Also displays sleep patterns by seasons.
+```{r}
+#Changing minutes of sleep to hours of sleep.
+fitbitdata$sleephours <- fitbitdata$sleepmin/60
+fitbitdata$sleephours
+
+#Plotting sleep (hours) over time.
+plot6 <- ggplot(fitbitdata, aes(date, sleephours)) +
+    geom_smooth(method = "loess", col = "tomato3") +
+    ylab("Duration of Sleep (hours)") +
+    xlab("Date") +
+    ggtitle("Duration of Sleep over Time")
+plot6
+
+#Plotting sleep (hours) by number of awakenings.
+plot7 <- ggplot(fitbitdata, aes(sleephours, awakenings)) +
+    geom_smooth(method = "loess", col = "tomato3") +
+    ylab("Number of Awakenings") +
+    xlab("Duration of Sleep (hours)") +
+    ggtitle("Sleep Hours and Number of Awakenings Over Time")
+plot7
+
+#Exporting plot 6 and 7 to pdf titled "sleep."
+sleep <- plot_grid(plot6, plot7, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
+
+pdf("sleep")
+grid.arrange(sleep, ncol=1)
+dev.off()
+
+```
+
+
+Sleep Efficiency Plots 8-9: Displays a calculated measure for sleep efficiency ("quality of sleep") over time and per seasons.
+```{r}
+#Formula taken/adapted from the FitBit website to calculate "sleep efficiency."
+#100 * time asleep / (time asleep + time restless + time awoken during sleep)
+#Data contains: time asleep, time awake, number of awakenings, and total "resting" time.
+
+#Calculating sleep efficiency.
+fitbitdata$sleepeff <- (100*fitbitdata$sleepmin)/(fitbitdata$sleepmin + fitbitdata$awakemin)
+
+#Finding NA values for sleep efficiency.
+deletena <- which(is.na(fitbitdata$sleepeff))
+fitbitdata2 <- fitbitdata[-deletena] #Removing NA values from fitbitdata and saving to a new fitbit dataframe.
+
+#Plotting sleep efficiency by date.
+plot8 <- ggplot(fitbitdata2, aes(date, sleepeff)) +
+    geom_smooth(method = "loess", col = "slateblue") +
+    ylab("Sleep Efficiency Score") +
+    xlab("Date") +
+    ggtitle("Sleep Efficiency over Time") +
+    theme(plot.title = element_text(hjust = 0.5))
+plot8
+
+#Plotting sleep hours by sleep efficiency.
+plot9 <- ggplot(fitbitdata2, aes(sleephours, sleepeff)) +
+    geom_point(col = "dodgerblue3") +
+    stat_smooth(method = "lm",
+                col = "black") +
+    xlab("Sleep Duration (hours)") +
+    ylab("Sleep Efficiency") +
+    ggtitle("Relationship Between Sleep Efficiency and Sleep Duration") +
+    theme(plot.title = element_text(hjust = 0.5))
+plot9
+
+#Just to confirm, looking at the relationship between sleep efficiency and hours of sleep.
+summary(lm(sleepeff ~ sleephours, data=fitbitdata2))
+#Not a significant relationship.
+
+#Exporting plot 8 and 9 to pdf titled "sleep."
+sleepefficiency <- plot_grid(plot8, plot9, align = "v", nrow = 2, rel_heights = c(1/2, 1/2))
+
+pdf("sleepefficiency")
+grid.arrange(sleepefficiency, ncol=1)
+dev.off()
+
+```

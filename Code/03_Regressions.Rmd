@@ -1,0 +1,24 @@
+PART III. REGRESSIONS.
+
+Regression analysis models to see the relationship between distance and season (and other variables).
+```{r}
+install.packages(stargazer)
+library(stargazer)
+
+#Saving all models in order to output later in htm file.
+model1 <- lm(distance ~ Season, data=fitbitdata) 
+summary(model1) #Strong relationship between spring, summer, and fall with distance (not true for winter).
+
+model2 <- lm(distance ~ Season + sleephours, data=fitbitdata)
+summary(model2) #All significant additions to the model except for "Winter".
+
+model3 <- lm(distance ~ Season + sleephours + awakings, data=fitbitdata)
+summary(model3) #Hours of sleep is no longer a significant addition to the model with the addition of number of awakenings over the course of a night.
+
+model4 <- lm(distance ~ Season + sleephours + sleepeff, data=fitbitdata2)
+summary(model4) #Sleep efficiency is not a siginificant addition to the model (instead of awakenings). 
+
+#Using stargazer program to output all model/regression results into htm file.
+stargazer(model1, model2, model3, model4, type="text", dep.var.labels=c("Distance (miles)"), covariate.labels=c("Spring", "Summer", "Winter", "Hours of Sleep","Number of Awakenings", "Sleep Efficiency"), out="regresults.txt")
+
+```

@@ -13,7 +13,6 @@ Installing relevant libraries.
 library(foreign)
 library(lubridate)
 library(ggplot2)
-library(viridis)
 ```
 
 Import fitbit dataset. ACTIVITY data starts on date 05-08-2015. 
@@ -87,7 +86,7 @@ sleep <- read.csv(file="sleep.csv", stringsAsFactors=F)
 dim(sleep) #367 rows, 5 columns = 367 observations, 5 variables.
 
 colnames(sleep) 
-colnames(sleep) <- c("date", "sleepmin", "awakemin", "awakings", "restmin")
+colnames(sleep) <- c("date", "sleepmin", "awakemin", "awakenings", "restmin")
 colnames(sleep)
 
 class(sleep$date) #Character.
@@ -136,4 +135,7 @@ fitbitdata <- fitbitdata[-duplicates,] #Removing duplicates.
 which(duplicated(fitbitdata$date)) #0 duplicates now. 361 unique observations for 364 days between May 9 2015 and May 7 2016.
 
 fitbitdata$date <- as.Date(fitbitdata$date) #Formating date variable as date.
+
+write.csv(fitbitdata, "fitbitdata.csv")
+
 ```

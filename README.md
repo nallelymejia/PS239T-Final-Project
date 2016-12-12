@@ -1,4 +1,4 @@
-##PS239T-Final-Project
+##PS239T Final Project: Yearlong FitBit Data
 
 ##Short Description
 Drawing from yearlong FitBit data, this code provides the foundation for preliminary analysis of the data. The variables analyzed in this code regard sleeping duration and sleep efficiency, calories burned and distance tracked as well as looking at the data by seasons. 
